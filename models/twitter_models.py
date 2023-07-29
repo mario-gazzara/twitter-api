@@ -3,6 +3,10 @@ from typing import List
 from pydantic import BaseModel
 
 
+class NoReturnModel(BaseModel):
+    pass
+
+
 class GuestTokenResponseModel(BaseModel):
     guest_token: str
 

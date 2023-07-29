@@ -758,16 +758,19 @@ if __name__ == '__main__':
 
     flow.login_flow()
     flow.LoginJsInstrumentationSubtask()
-
+    print(flow.session.cookies.get("ct0"))
     while "LoginSuccessSubtask" not in flow.get_subtask_ids():
         try:
             if "LoginEnterUserIdentifierSSO" in flow.get_subtask_ids():
+                print(flow.session.cookies.get("ct0"))
                 print("Telephone number / Email address / User name")
                 flow.LoginEnterUserIdentifierSSO(input())
             elif "LoginEnterAlternateIdentifierSubtask" in flow.get_subtask_ids():
+                print(flow.session.cookies.get("ct0"))
                 print(flow.content["subtasks"][0]["enter_text"]["primary_text"]["text"])
                 flow.LoginEnterAlternateIdentifierSubtask(input())
             elif "LoginEnterPassword" in flow.get_subtask_ids():
+                print(flow.session.cookies.get("ct0"))
                 print(flow.content["subtasks"][0]["enter_password"]["primary_text"]["text"])
                 flow.LoginEnterPassword(input())
             elif "AccountDuplicationCheck" in flow.get_subtask_ids():
