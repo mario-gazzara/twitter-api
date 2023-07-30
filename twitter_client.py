@@ -1,12 +1,13 @@
 import random
 import time
-from typing import Any, Callable, Dict, Generic, Type, TypeVar
+from http import HTTPMethod
+from typing import Any, Dict, Generic, List, Type, TypeVar
 
 import requests
 from pydantic import BaseModel, FieldValidationInfo, field_validator
 
 from logger import setup_logger
-from models.twitter_models import GuestTokenResponseModel, NoReturnModel
+from models.twitter_models import EmptyResponseModel, GuestTokenResponseModel
 
 logger = setup_logger(__name__)
 
@@ -36,10 +37,16 @@ class TwitterClientOptions(BaseModel):
 T = TypeVar("T", bound=BaseModel)
 
 
+class TwitterAPIErrorResponse(BaseModel):
+    code: int
+    message: str
+
+
 class TwitterAPIResponse(BaseModel, Generic[T]):
     is_success: bool
     status_code: int
     data: T | None = None
+    errors: List[TwitterAPIErrorResponse] | None = None
 
 
 class TwitterClient:
@@ -64,17 +71,6 @@ class TwitterClient:
 
     def __exit__(self, exc_type, exc_value, traceback) -> None:
         self.__session.close()
-
-    def delayed_request(func: Callable[..., Any]) -> Callable[..., Any]:  # type: ignore
-        def wrapper(self: "TwitterClient", *args, **kwargs):
-            wait_time = random.uniform(
-                self.options.min_wait_time if self.options else 1,
-                self.options.max_wait_time if self.options else 5)
-
-            time.sleep(wait_time)
-            return func(self, *args, **kwargs)
-
-        return wrapper
 
     @property
     def session(self) -> requests.Session:
@@ -104,13 +100,48 @@ class TwitterClient:
     def base_url(self) -> str:
         return "https://twitter.com"
 
-    @delayed_request
-    def get(self, url: str, headers: Dict[str, Any] = {}, params: Dict[str, Any] = {}, model_type: Type[T] | None = None) -> TwitterAPIResponse[T]:
-        response = self.__session.get(url, headers=headers or self.headers, params=params, proxies=self.options.proxies if self.options else None)
+    def request(
+            self,
+            method: HTTPMethod,
+            url: str,
+            model_type: Type[T],
+            headers: Dict[str, Any] | None = None,
+            params: Dict[str, Any] | None = None,
+            data: Dict[str, Any] | None = None) -> 'TwitterAPIResponse[T]':
+        headers = headers or self.headers
+        request_method = getattr(self.__session, method.value.lower())
 
-        response.raise_for_status()  # Check for any HTTP errors in the response
+        wait_time = random.uniform(
+            self.options.min_wait_time if self.options else 1,
+            self.options.max_wait_time if self.options else 5)
 
-        model_response = model_type and self.__deserialize_response_to_model(response, model_type)
+        time.sleep(wait_time)
+
+        response: requests.Response = request_method(
+            url,
+            headers=headers,
+            params=params, json=data,
+            proxies=self.options.proxies if self.options else None)
+
+        if 400 <= response.status_code and response.status_code < 500:
+            logger.warning(f"Request failed with status code {response.status_code} and body {response.text}")
+
+            try:
+                errors_json = response.json()
+                errors = [TwitterAPIErrorResponse(**error) for error in errors_json]
+
+            except ValueError:
+                errors = None
+
+            return TwitterAPIResponse[T](
+                is_success=False,
+                status_code=response.status_code,
+                errors=errors
+            )
+
+        response.raise_for_status()
+
+        model_response = self.__deserialize_response_to_model(response, model_type)
 
         return TwitterAPIResponse[T](
             is_success=response.ok,
@@ -118,34 +149,14 @@ class TwitterClient:
             data=model_response
         )
 
-    @delayed_request
-    def post(self, url: str, headers: Dict[str, Any] = {},
-             params: Dict[str, Any] = {}, data: Dict[str, Any] = {}, model_type: Type[T] | None = None) -> TwitterAPIResponse[T]:
-        response = self.__session.post(url, headers=headers or self.headers, params=params, json=data,
-                                       proxies=self.options.proxies if self.options else None)
-
-        response.raise_for_status()  # Check for any HTTP errors in the response
-
-        model_response = model_type and self.__deserialize_response_to_model(response, model_type)
-
-        return TwitterAPIResponse[T](
-            is_success=response.ok,
-            status_code=response.status_code,
-            data=model_response,
-        )
-
     def __hydratate_session(self) -> None:
-        """
-        Hydratate the session with base cookies and headers, guest token and csrf token
-        """
-        self.get(self.base_url)
+        self.request(HTTPMethod.GET, self.base_url, EmptyResponseModel)
 
         self.__headers.update({
             'Authorization': 'Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA'
         })
 
-        guest_response: TwitterAPIResponse[GuestTokenResponseModel] = self.post(
-            f"{self.api_base_url}/guest/activate.json", model_type=GuestTokenResponseModel)
+        guest_response = self.request(HTTPMethod.POST, f"{self.api_base_url}/guest/activate.json", model_type=GuestTokenResponseModel)
 
         if not guest_response.is_success or guest_response.data is None or guest_response.data.guest_token is None:
             raise Exception("Failed to hydratate session: missing guest token")
@@ -155,20 +166,13 @@ class TwitterClient:
             'x-csrf-token': self.__session.cookies.get("ct0")
         })
 
-    def __deserialize_response_to_model(self, response: requests.Response, model_type: Type[T]) -> T | None:
-        """
-        Deserialize a requests.Response object to a Pydantic model.
+    def __deserialize_response_to_model(self, response: requests.Response, model_type: Type[T]) -> T:
+        if model_type is EmptyResponseModel:
+            return model_type()
 
-        Args:
-            response (requests.Response): The response object from the API.
-            model_type (Type[T]): The Pydantic model type.
-
-        Returns:
-            T | None: An instance of the Pydantic model if deserialization succeeds, otherwise None.
-        """
         try:
             json_data = response.json()
             return model_type.model_validate(json_data)
         except (requests.exceptions.HTTPError, ValueError, TypeError, KeyError) as e:
             logger.error("Error occurred during deserialization: %s", e)
-            return None
+            raise e

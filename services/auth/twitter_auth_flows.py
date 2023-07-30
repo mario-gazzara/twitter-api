@@ -1,9 +1,9 @@
-
 # the lines of code below are used to avoid circular imports with type hinting
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+
 
 if TYPE_CHECKING:
     from services.auth.twitter_auth_process import TwitterAuthenticationProcess
@@ -12,38 +12,76 @@ if TYPE_CHECKING:
 
 import abc
 import json
+from http import HTTPMethod
+from typing import Any, Dict
 
+from logger import setup_logger
 from models.twitter_models import TwitterFlowResponseModel
+from utils import deep_merge
+
+logger = setup_logger(__name__)
 
 
 class TwitterAbstractAuthenticationFlow(abc.ABC):
-    __flow_token: str | None = None
-    __subtask_id: str
+    _flow_token: str | None = None
+    _subtask_id: str | None = None
 
     @abc.abstractmethod
-    def handle(self, context: TwitterAuthenticationProcess):
+    def build_payload(self, context: TwitterAuthenticationProcess) -> Dict[str, Any]:
         pass
+
+    def handle(self, context: TwitterAuthenticationProcess) -> None:
+        logger.debug(f'Executing {self.subtask_id or "Init Auth"} subtask')
+
+        payload = self.build_payload(context)
+
+        if self._flow_token is not None and self._subtask_id is not None:
+            payload = deep_merge(payload, {
+                "flow_token": self._flow_token,
+            })
+
+        params = {"flow_name": "login"} if self._flow_token is None else None
+
+        response = context.twitter_client.request(
+            HTTPMethod.POST,
+            f'{context.twitter_client.api_base_url}/onboarding/task.json',
+            params=params,
+            data=payload,
+            model_type=TwitterFlowResponseModel
+        )
+
+        if not response.is_success or response.data is None:
+            logger.error(f'Failed to execute {self.subtask_id} subtask')
+            logger.error(f'Response status code: {response.status_code}')
+
+            if response.errors:
+                logger.error(f'Response body: {json.dumps([e.model_dump() for e in response.errors], indent=4)}')
+
+            return
+
+        subtask_id = response.data.subtasks[0].subtask_id if len(response.data.subtasks) > 0 else None
+        context.set_next_flow(subtask_id, response.data.flow_token)
 
     @property
     def flow_token(self) -> str | None:
-        return self.__flow_token
+        return self._flow_token
 
     @flow_token.setter
-    def flow_token(self, value: str) -> None:
-        self.__flow_token = value
+    def flow_token(self, value: str | None) -> None:
+        self._flow_token = value
 
     @property
-    def subtask_id(self) -> str:
-        return self.__subtask_id
+    def subtask_id(self) -> str | None:
+        return self._subtask_id
 
     @subtask_id.setter
-    def subtask_id(self, value: str) -> None:
-        self.__subtask_id = value
+    def subtask_id(self, value: str | None) -> None:
+        self._subtask_id = value
 
 
 class TwitterInitAuthFlow(TwitterAbstractAuthenticationFlow):
-    def handle(self, context: TwitterAuthenticationProcess):
-        payload = {
+    def build_payload(self, _: TwitterAuthenticationProcess) -> Dict[str, Any]:
+        return {
             "input_flow_data": {
                 "flow_context": {
                     "debug_overrides": {},
@@ -59,77 +97,33 @@ class TwitterInitAuthFlow(TwitterAbstractAuthenticationFlow):
             },
         }
 
-        response = context.twitter_client.post(
-            f'{context.twitter_client.api_base_url}/onboarding/task.json',
-            params={'flow_name': 'login'},
-            data=payload,
-            model_type=TwitterFlowResponseModel
-        )
-
-        if not response.is_success or response.data is None:
-            raise Exception('Failed to initialize authentication flow')
-
-        data: TwitterFlowResponseModel = response.data
-
-        subtask_id = data.subtasks[0].subtask_id if len(data.subtasks) > 0 else 'None'
-        context.set_next_flow(subtask_id, data.flow_token)
-
 
 class LoginJsInstrumentationSubtaskFlow(TwitterAbstractAuthenticationFlow):
-    def handle(self, context: TwitterAuthenticationProcess):
-        payload = {
-            "flow_token": self.flow_token,
+    def build_payload(self, _: TwitterAuthenticationProcess) -> Dict[str, Any]:
+        return {
             "subtask_inputs": [
                 {
-                    "subtask_id": "LoginJsInstrumentationSubtask",
-                    "js_instrumentation": {
-                        "response": json.dumps(
-                            {
-                                "rf": {
-                                    "af07339bbc6d24ced887d705eb0c9fd29b4a7d7ddc21136c9f94d53a4bc774d2": 88,
-                                    "a6ce87d6481c6ec4a823548be3343437888441d2a453061c54f8e2eb325856f7": 250,
-                                    "a0062ad06384a8afd38a41cd83f31b0dbfdea0eff4b24c69f0dd9095b2fb56d6": 16,
-                                    "a929e5913a5715d93491eaffaa139ba4977cbc826a5e2dbcdc81cae0f093db25": 186,
-                                },
-                                "s": "Q-H-53m1uXImK0F0ogrxRQtCWTH1KIlPbIy0MloowlMa4WNK5ZCcDoXyRs1q_" +
-                                "cPbynK73w_wfHG_UVRKKBWRoh6UJtlPS5kMa1p8fEvTYi76hwdzBEzovieR8t86UpeSkSBFYcL8foYKSp6Nop5mQR" +
-                                "_QHGyEeleclCPUvzS0HblBJqZZdtUo-6by4BgCyu3eQ4fY5nOF8fXC85mu6k34wo982LMK650NsoPL96DBuloqSZvSHU47" +
-                                "wq2uA4xy24UnI2WOc6U9KTvxumtchSYNnXq1HV662B8U2-jWrzvIU4yUHV3JYUO6sbN6j8Ho9JaUNJpJSK7REwqCBQ3yG7iwMAAAAX2Vqcbs",
-                            }
-                        ),
-                        "link": "next_link",
-                    },
+                    "subtask_id": self.subtask_id,
                 }
             ],
         }
 
-        response = context.twitter_client.post(
-            f'{context.twitter_client.api_base_url}/onboarding/task.json',
-            data=payload,
-            model_type=TwitterFlowResponseModel
-        )
-
-        if not response.is_success or response.data is None:
-            raise Exception('Failed to execute login js instrumentation subtask')
-
-        data: TwitterFlowResponseModel = response.data
-
-        subtask_id = data.subtasks[0].subtask_id if len(data.subtasks) > 0 else 'None'
-        context.set_next_flow(subtask_id, data.flow_token)
-
 
 class TwitterEnterUserIdentifierSSOFlow(TwitterAbstractAuthenticationFlow):
-    def handle(self, context: TwitterAuthenticationProcess):
-        payload = {
-            "flow_token": self.flow_token,
+    def build_payload(self, context: TwitterAuthenticationProcess) -> Dict[str, Any]:
+        return {
             "subtask_inputs": [
                 {
-                    "subtask_id": "LoginEnterUserIdentifierSSO",
+                    "subtask_id": self.subtask_id,
                     "settings_list": {
                         "setting_responses": [
                             {
                                 "key": "user_identifier",
-                                "response_data": {"text_data": {"result": context.user_id}},
+                                "response_data": {
+                                    "text_data": {
+                                        "result": context.user_id
+                                    }
+                                },
                             }
                         ],
                         "link": "next_link",
@@ -137,99 +131,47 @@ class TwitterEnterUserIdentifierSSOFlow(TwitterAbstractAuthenticationFlow):
                 }
             ],
         }
-        response = context.twitter_client.post(
-            f'{context.twitter_client.api_base_url}/onboarding/task.json',
-            data=payload,
-            model_type=TwitterFlowResponseModel
-        )
-
-        if not response.is_success or response.data is None:
-            raise Exception('Failed to execute enter user identifier sso subtask')
-
-        data: TwitterFlowResponseModel = response.data
-
-        subtask_id = data.subtasks[0].subtask_id if len(data.subtasks) > 0 else 'None'
-        context.set_next_flow(subtask_id, data.flow_token)
 
 
 class TwitterEnterAlternateIdentifierFlow(TwitterAbstractAuthenticationFlow):
-    def handle(self, context: TwitterAuthenticationProcess):
-        payload = {
-            "flow_token": self.flow_token,
+    def build_payload(self, context: TwitterAuthenticationProcess) -> Dict[str, Any]:
+        return {
             "subtask_inputs": [
                 {
-                    "subtask_id": "LoginEnterAlternateIdentifierSubtask",
-                    "enter_text": {"text": context.alternate_id, "link": "next_link"},
+                    "subtask_id": self.subtask_id,
+                    "enter_text": {
+                        "text": context.alternate_id,
+                        "link": "next_link"
+                    },
                 }
             ],
         }
-
-        response = context.twitter_client.post(
-            f'{context.twitter_client.api_base_url}/onboarding/task.json',
-            data=payload,
-            model_type=TwitterFlowResponseModel
-        )
-
-        if not response.is_success or response.data is None:
-            raise Exception('Failed to execute enter alternate identifier subtask')
-
-        data: TwitterFlowResponseModel = response.data
-
-        subtask_id = data.subtasks[0].subtask_id if len(data.subtasks) > 0 else 'None'
-        context.set_next_flow(subtask_id, data.flow_token)
 
 
 class TwitterEnterPasswordFlow(TwitterAbstractAuthenticationFlow):
-    def handle(self, context: TwitterAuthenticationProcess):
-        payload = {
-            "flow_token": self.flow_token,
+    def build_payload(self, context: TwitterAuthenticationProcess) -> Dict[str, Any]:
+        return {
             "subtask_inputs": [
                 {
-                    "subtask_id": "LoginEnterPassword",
-                    "enter_password": {"password": context.password, "link": "next_link"},
+                    "subtask_id": self.subtask_id,
+                    "enter_password": {
+                        "password": context.password,
+                        "link": "next_link"
+                    },
                 }
             ],
         }
 
-        response = context.twitter_client.post(
-            f'{context.twitter_client.api_base_url}/onboarding/task.json',
-            data=payload,
-            model_type=TwitterFlowResponseModel
-        )
-
-        if not response.is_success or response.data is None:
-            raise Exception('Failed to execute enter password subtask')
-
-        data: TwitterFlowResponseModel = response.data
-
-        subtask_id = data.subtasks[0].subtask_id if len(data.subtasks) > 0 else 'None'
-        context.set_next_flow(subtask_id, data.flow_token)
-
 
 class TwitterAccountDuplicationCheckFlow(TwitterAbstractAuthenticationFlow):
-    def handle(self, context: TwitterAuthenticationProcess):
-        payload = {
-            "flow_token": self.flow_token,
+    def build_payload(self, _: TwitterAuthenticationProcess) -> Dict[str, Any]:
+        return {
             "subtask_inputs": [
                 {
-                    "subtask_id": "AccountDuplicationCheck",
+                    "subtask_id": self.subtask_id,
                     "check_logged_in_account": {
                         "link": "AccountDuplicationCheck_false"
                     },
                 }
             ],
         }
-
-        response = context.twitter_client.post(
-            f'{context.twitter_client.api_base_url}/onboarding/task.json',
-            data=payload,
-            model_type=TwitterFlowResponseModel
-        )
-
-        if not response.is_success or response.data is None:
-            raise Exception('Failed to execute enter password subtask')
-
-        data: TwitterFlowResponseModel = response.data
-
-        subtask_id = data.subtasks[0].subtask_id if len(data.subtasks) > 0 else 'None'
-        context.set_next_flow(subtask_id, data.flow_token)

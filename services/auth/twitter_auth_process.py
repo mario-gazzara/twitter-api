@@ -19,7 +19,8 @@ class TwitterAuthFlows(str, enum.Enum):
     LOGIN_ENTER_ALTERNATE_IDENTIFIER = 'LoginEnterAlternateIdentifierSubtask'
     LOGIN_ENTER_PASSWORD = 'LoginEnterPassword'
     ACCOUNT_DUPLICATION_CHECK = 'AccountDuplicationCheck'
-    SUCCESS_EXIT = 'SuccessExit'
+    LOGIN_SUCCESS_SUBTASK = 'LoginSuccessSubtask',
+    LOGIN_FAILURE_SUBTASK = 'LoginFailureSubtask'
 
 
 TwitterAurhFlowsToStatesMap: Dict[str, TwitterAbstractAuthenticationFlow] = {
@@ -37,6 +38,8 @@ class TwitterAuthenticationProcess:
     user_id: str
     alternate_id: str
     password: str
+    is_authenticated: bool = False
+    is_error: bool = False
 
     __flow: TwitterAbstractAuthenticationFlow
 
@@ -50,16 +53,18 @@ class TwitterAuthenticationProcess:
     def handle(self):
         self.__flow.handle(self)
 
-    @property
-    def flow(self) -> TwitterAbstractAuthenticationFlow:
-        return self.__flow
-
-    def set_next_flow(self, subtask_id: str, token: str):
-        if subtask_id == TwitterAuthFlows.SUCCESS_EXIT.value:
+    def set_next_flow(self, subtask_id: str | None, token: str | None):
+        if subtask_id == TwitterAuthFlows.LOGIN_SUCCESS_SUBTASK.value:
+            self.is_authenticated = True
             logger.info('Successfully authenticated')
             return
 
-        next_flow = TwitterAurhFlowsToStatesMap.get(subtask_id)
+        if subtask_id == TwitterAuthFlows.LOGIN_FAILURE_SUBTASK.value:
+            self.is_error = True
+            logger.info('Authentication failed')
+            return
+
+        next_flow = TwitterAurhFlowsToStatesMap.get(subtask_id) if subtask_id is not None else None
 
         if next_flow is None:
             raise Exception(f'Flow not handled: {subtask_id}')

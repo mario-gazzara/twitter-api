@@ -12,4 +12,7 @@ if __name__ == '__main__':
     )) as twitter_client:
         twitter_api_service = TwitterAPIService(twitter_client)
 
-        twitter_api_service.authenticate(user_id, alternate_user_id, password)
+        is_authenticated = twitter_api_service.authenticate(user_id, alternate_user_id, password)
+
+        if is_authenticated:
+            print('Authenticated!')

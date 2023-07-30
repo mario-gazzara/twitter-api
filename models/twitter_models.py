@@ -3,7 +3,7 @@ from typing import List
 from pydantic import BaseModel
 
 
-class NoReturnModel(BaseModel):
+class EmptyResponseModel(BaseModel):
     pass
 
 
