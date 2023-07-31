@@ -1,6 +1,6 @@
 
 import enum
-from typing import Dict
+from typing import Dict, Tuple
 
 from logger import setup_logger
 from services.auth.twitter_auth_flows import (
@@ -23,7 +23,7 @@ class TwitterAuthFlows(str, enum.Enum):
     LOGIN_FAILURE_SUBTASK = 'LoginFailureSubtask'
 
 
-TwitterAurhFlowsToStatesMap: Dict[str, TwitterAbstractAuthenticationFlow] = {
+TW_AUTH_FLOWS_TO_STATES: Dict[str, TwitterAbstractAuthenticationFlow] = {
     TwitterAuthFlows.LOGIN_JS_INSTRUMENTATION_SUBTASK.value: LoginJsInstrumentationSubtaskFlow(),
     TwitterAuthFlows.LOGIN_ENTER_USER_IDENTIFIER_SSO.value: TwitterEnterUserIdentifierSSOFlow(),
     TwitterAuthFlows.LOGIN_ENTER_USER_IDENTIFIER_SSO.value: TwitterEnterUserIdentifierSSOFlow(),
@@ -33,13 +33,13 @@ TwitterAurhFlowsToStatesMap: Dict[str, TwitterAbstractAuthenticationFlow] = {
 }
 
 
-class TwitterAuthenticationProcess:
+class TwitterAuthenticationContext:
     twitter_client: TwitterClient
     user_id: str
     alternate_id: str
     password: str
-    is_authenticated: bool = False
-    is_error: bool = False
+    flow_token: str | None
+    subtask_id: str | None
 
     __flow: TwitterAbstractAuthenticationFlow
 
@@ -50,25 +50,5 @@ class TwitterAuthenticationProcess:
         self.alternate_id = alternate_id
         self.password = password
 
-    def handle(self):
-        self.__flow.handle(self)
-
-    def set_next_flow(self, subtask_id: str | None, token: str | None):
-        if subtask_id == TwitterAuthFlows.LOGIN_SUCCESS_SUBTASK.value:
-            self.is_authenticated = True
-            logger.info('Successfully authenticated')
-            return
-
-        if subtask_id == TwitterAuthFlows.LOGIN_FAILURE_SUBTASK.value:
-            self.is_error = True
-            logger.info('Authentication failed')
-            return
-
-        next_flow = TwitterAurhFlowsToStatesMap.get(subtask_id) if subtask_id is not None else None
-
-        if next_flow is None:
-            raise Exception(f'Flow not handled: {subtask_id}')
-
-        self.__flow = next_flow
-        self.__flow.flow_token = token
-        self.__flow.subtask_id = subtask_id
+    def handle(self) -> Tuple[str | None, str | None]:
+        return self.__flow.handle(self)

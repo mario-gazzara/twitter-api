@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
+from typing import TYPE_CHECKING, Tuple
 
 if TYPE_CHECKING:
-    from services.auth.twitter_auth_process import TwitterAuthenticationProcess
+    from services.auth.twitter_auth_context import TwitterAuthenticationContext
 
 # end of the lines of code used to avoid circular imports with type hinting
 
@@ -23,64 +22,46 @@ logger = setup_logger(__name__)
 
 
 class TwitterAbstractAuthenticationFlow(abc.ABC):
-    _flow_token: str | None = None
-    _subtask_id: str | None = None
-
     @abc.abstractmethod
-    def build_payload(self, context: TwitterAuthenticationProcess) -> Dict[str, Any]:
+    def build_payload(self, context: TwitterAuthenticationContext) -> Dict[str, Any]:
         pass
 
-    def handle(self, context: TwitterAuthenticationProcess) -> None:
-        logger.debug(f'Executing {self.subtask_id or "Init Auth"} subtask')
+    def handle(self, context: TwitterAuthenticationContext) -> Tuple[str | None, str | None]:
+        logger.debug(f'Executing {context.subtask_id or "Init Auth"} subtask')
 
         payload = self.build_payload(context)
 
-        if self._flow_token is not None and self._subtask_id is not None:
+        if context.flow_token is not None and context.subtask_id is not None:
             payload = deep_merge(payload, {
-                "flow_token": self._flow_token,
+                "flow_token": context.flow_token,
             })
 
-        params = {"flow_name": "login"} if self._flow_token is None else None
+        params = {"flow_name": "login"} if context.flow_token is None else None
 
         response = context.twitter_client.request(
             HTTPMethod.POST,
-            f'{context.twitter_client.api_base_url}/onboarding/task.json',
+            f'{context.twitter_client.api_base_url_v_1_1}/onboarding/task.json',
             params=params,
             data=payload,
             model_type=TwitterFlowResponseModel
         )
 
         if not response.is_success or response.data is None:
-            logger.error(f'Failed to execute {self.subtask_id} subtask')
+            logger.error(f'Failed to execute {context.subtask_id} subtask')
             logger.error(f'Response status code: {response.status_code}')
 
             if response.errors:
                 logger.error(f'Response body: {json.dumps([e.model_dump() for e in response.errors], indent=4)}')
 
-            return
+            return None, None
 
         subtask_id = response.data.subtasks[0].subtask_id if len(response.data.subtasks) > 0 else None
-        context.set_next_flow(subtask_id, response.data.flow_token)
 
-    @property
-    def flow_token(self) -> str | None:
-        return self._flow_token
-
-    @flow_token.setter
-    def flow_token(self, value: str | None) -> None:
-        self._flow_token = value
-
-    @property
-    def subtask_id(self) -> str | None:
-        return self._subtask_id
-
-    @subtask_id.setter
-    def subtask_id(self, value: str | None) -> None:
-        self._subtask_id = value
+        return response.data.flow_token, subtask_id
 
 
 class TwitterInitAuthFlow(TwitterAbstractAuthenticationFlow):
-    def build_payload(self, _: TwitterAuthenticationProcess) -> Dict[str, Any]:
+    def build_payload(self, _: TwitterAuthenticationContext) -> Dict[str, Any]:
         return {
             "input_flow_data": {
                 "flow_context": {
@@ -99,22 +80,22 @@ class TwitterInitAuthFlow(TwitterAbstractAuthenticationFlow):
 
 
 class LoginJsInstrumentationSubtaskFlow(TwitterAbstractAuthenticationFlow):
-    def build_payload(self, _: TwitterAuthenticationProcess) -> Dict[str, Any]:
+    def build_payload(self, context: TwitterAuthenticationContext) -> Dict[str, Any]:
         return {
             "subtask_inputs": [
                 {
-                    "subtask_id": self.subtask_id,
+                    "subtask_id": context.subtask_id,
                 }
             ],
         }
 
 
 class TwitterEnterUserIdentifierSSOFlow(TwitterAbstractAuthenticationFlow):
-    def build_payload(self, context: TwitterAuthenticationProcess) -> Dict[str, Any]:
+    def build_payload(self, context: TwitterAuthenticationContext) -> Dict[str, Any]:
         return {
             "subtask_inputs": [
                 {
-                    "subtask_id": self.subtask_id,
+                    "subtask_id": context.subtask_id,
                     "settings_list": {
                         "setting_responses": [
                             {
@@ -134,11 +115,11 @@ class TwitterEnterUserIdentifierSSOFlow(TwitterAbstractAuthenticationFlow):
 
 
 class TwitterEnterAlternateIdentifierFlow(TwitterAbstractAuthenticationFlow):
-    def build_payload(self, context: TwitterAuthenticationProcess) -> Dict[str, Any]:
+    def build_payload(self, context: TwitterAuthenticationContext) -> Dict[str, Any]:
         return {
             "subtask_inputs": [
                 {
-                    "subtask_id": self.subtask_id,
+                    "subtask_id": context.subtask_id,
                     "enter_text": {
                         "text": context.alternate_id,
                         "link": "next_link"
@@ -149,11 +130,11 @@ class TwitterEnterAlternateIdentifierFlow(TwitterAbstractAuthenticationFlow):
 
 
 class TwitterEnterPasswordFlow(TwitterAbstractAuthenticationFlow):
-    def build_payload(self, context: TwitterAuthenticationProcess) -> Dict[str, Any]:
+    def build_payload(self, context: TwitterAuthenticationContext) -> Dict[str, Any]:
         return {
             "subtask_inputs": [
                 {
-                    "subtask_id": self.subtask_id,
+                    "subtask_id": context.subtask_id,
                     "enter_password": {
                         "password": context.password,
                         "link": "next_link"
@@ -164,11 +145,11 @@ class TwitterEnterPasswordFlow(TwitterAbstractAuthenticationFlow):
 
 
 class TwitterAccountDuplicationCheckFlow(TwitterAbstractAuthenticationFlow):
-    def build_payload(self, _: TwitterAuthenticationProcess) -> Dict[str, Any]:
+    def build_payload(self, context: TwitterAuthenticationContext) -> Dict[str, Any]:
         return {
             "subtask_inputs": [
                 {
-                    "subtask_id": self.subtask_id,
+                    "subtask_id": context.subtask_id,
                     "check_logged_in_account": {
                         "link": "AccountDuplicationCheck_false"
                     },

@@ -1,7 +1,9 @@
 from logger import setup_logger
 from services.auth.session.cookies_cache_service_interface import CookiesCacheServiceInterface
 from services.auth.session.local_cookies_cache_service import LocalCookiesCacheService
-from services.auth.twitter_auth_process import TwitterAuthenticationProcess
+from services.auth.twitter_auth_context import (
+    TW_AUTH_FLOWS_TO_STATES, TwitterAuthenticationContext, TwitterAuthFlows
+)
 from twitter_client import TwitterClient
 
 logger = setup_logger(__name__)
@@ -25,12 +27,29 @@ class TwitterAPIService:
             self.__cookies_cache_service.load_cookies(self.__twitter_client.session, user_id)
             return True
 
-        auth_process = TwitterAuthenticationProcess(self.__twitter_client, user_id, alternate_id, password)
+        # It uses state pattern to handle twitter authentication flows
+        auth_context = TwitterAuthenticationContext(self.__twitter_client, user_id, alternate_id, password)
 
-        while not auth_process.is_authenticated and not auth_process.is_error:
-            auth_process.handle()
+        while True:
+            flow_token, subtask_id = auth_context.handle()
 
-        if auth_process.is_authenticated and persist_session:
-            self.__cookies_cache_service.save_cookies(self.__twitter_client.session, user_id)
+            if subtask_id == TwitterAuthFlows.LOGIN_SUCCESS_SUBTASK.value:
+                logger.info('Successfully authenticated')
 
-        return auth_process.is_authenticated and not auth_process.is_error
+                if persist_session:
+                    self.__cookies_cache_service.save_cookies(self.__twitter_client.session, user_id)
+
+                return True
+
+            if subtask_id == TwitterAuthFlows.LOGIN_FAILURE_SUBTASK.value:
+                logger.info('Authentication failed')
+                return False
+
+            next_flow = TW_AUTH_FLOWS_TO_STATES.get(subtask_id) if subtask_id is not None else None
+
+            if next_flow is None:
+                logger.warning(f'Flow not handled: {subtask_id}')
+                return False
+
+            auth_context.flow_token = flow_token
+            auth_context.subtask_id = subtask_id

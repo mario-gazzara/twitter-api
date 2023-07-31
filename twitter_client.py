@@ -50,7 +50,10 @@ class TwitterAPIResponse(BaseModel, Generic[T]):
 
 
 class TwitterClient:
-    DEFAULT_LANG: str = "en"
+    # This bearer token is used to authenticate requests to the Twitter API and seems to be always the same,
+    # I don't know if it's a good idea to hardcode it but it's the only way I found to make requests to the API
+    __DEFAULT_BEARER_TOKEN: str = "AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
+    __DEFAULT_LANG: str = "en"
 
     __session: requests.Session
     __options: TwitterClientOptions | None = None
@@ -58,7 +61,7 @@ class TwitterClient:
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36',
         'Content-Type': 'application/json',
         "x-twitter-active-user": "yes",
-        "x-twitter-client-language": DEFAULT_LANG,
+        "x-twitter-client-language": __DEFAULT_LANG,
     }
 
     def __init__(self, options: TwitterClientOptions | None = None) -> None:
@@ -93,7 +96,7 @@ class TwitterClient:
         self.__headers = headers
 
     @property
-    def api_base_url(self) -> str:
+    def api_base_url_v_1_1(self) -> str:
         return "https://api.twitter.com/1.1"
 
     @property
@@ -153,10 +156,10 @@ class TwitterClient:
         self.request(HTTPMethod.GET, self.base_url, EmptyResponseModel)
 
         self.__headers.update({
-            'Authorization': 'Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA'
+            'Authorization': f'Bearer {self.__DEFAULT_BEARER_TOKEN}'
         })
 
-        guest_response = self.request(HTTPMethod.POST, f"{self.api_base_url}/guest/activate.json", model_type=GuestTokenResponseModel)
+        guest_response = self.request(HTTPMethod.POST, f"{self.api_base_url_v_1_1}/guest/activate.json", model_type=GuestTokenResponseModel)
 
         if not guest_response.is_success or guest_response.data is None or guest_response.data.guest_token is None:
             raise Exception("Failed to hydratate session: missing guest token")
