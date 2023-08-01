@@ -11,10 +11,9 @@ class GuestTokenResponseModel(BaseModel):
     guest_token: str
 
 
-class TwitterFlowSubtaskModel(BaseModel):
-    subtask_id: str
-
-
 class TwitterFlowResponseModel(BaseModel):
+    class TwitterFlowSubtaskModel(BaseModel):
+        subtask_id: str
+
     flow_token: str
     subtasks: List[TwitterFlowSubtaskModel]

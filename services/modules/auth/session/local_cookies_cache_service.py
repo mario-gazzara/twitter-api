@@ -5,10 +5,12 @@ from http.cookiejar import CookieJar
 
 import requests
 
-from logger import setup_logger
-from services.auth.session.cookies_cache_service_interface import CookiesCacheServiceInterface
+from logger import get_logger
+from services.modules.auth.session.cookies_cache_service_interface import (
+    CookiesCacheServiceInterface
+)
 
-logger = setup_logger(__name__)
+logger = get_logger(__name__)
 
 
 class LocalCookiesCacheService(CookiesCacheServiceInterface):

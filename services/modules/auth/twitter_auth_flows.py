@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Tuple
 
 if TYPE_CHECKING:
-    from services.auth.twitter_auth_context import TwitterAuthenticationContext
+    from services.modules.auth.twitter_auth_context import TwitterAuthenticationContext
 
 # end of the lines of code used to avoid circular imports with type hinting
 
@@ -14,11 +14,11 @@ import json
 from http import HTTPMethod
 from typing import Any, Dict
 
-from logger import setup_logger
+from logger import get_logger
 from models.twitter_models import TwitterFlowResponseModel
 from utils import deep_merge
 
-logger = setup_logger(__name__)
+logger = get_logger(__name__)
 
 
 class TwitterAbstractAuthenticationFlow(abc.ABC):

@@ -6,10 +6,10 @@ from typing import Any, Dict, Generic, List, Type, TypeVar
 import requests
 from pydantic import BaseModel, FieldValidationInfo, field_validator
 
-from logger import setup_logger
+from logger import get_logger
 from models.twitter_models import EmptyResponseModel, GuestTokenResponseModel
 
-logger = setup_logger(__name__)
+logger = get_logger(__name__)
 
 
 class TwitterClientOptions(BaseModel):
@@ -69,7 +69,7 @@ class TwitterClient:
 
     def __enter__(self) -> "TwitterClient":
         self.__session = requests.Session()
-        self.__hydratate_session()
+        self.__get_guest_token()
         return self
 
     def __exit__(self, exc_type, exc_value, traceback) -> None:
@@ -103,6 +103,10 @@ class TwitterClient:
     def base_url(self) -> str:
         return "https://twitter.com"
 
+    @property
+    def gql_url(self) -> str:
+        return "https://twitter.com/i/api/graphql"
+
     def request(
             self,
             method: HTTPMethod,
@@ -112,18 +116,19 @@ class TwitterClient:
             params: Dict[str, Any] | None = None,
             data: Dict[str, Any] | None = None) -> 'TwitterAPIResponse[T]':
         headers = headers or self.headers
-        request_method = getattr(self.__session, method.value.lower())
 
-        wait_time = random.uniform(
+        wait_time = random.randint(
             self.options.min_wait_time if self.options else 1,
             self.options.max_wait_time if self.options else 5)
 
         time.sleep(wait_time)
 
-        response: requests.Response = request_method(
+        response = self.session.request(
+            method.value.lower(),
             url,
             headers=headers,
-            params=params, json=data,
+            params=params,
+            json=data,
             proxies=self.options.proxies if self.options else None)
 
         if 400 <= response.status_code and response.status_code < 500:
@@ -152,13 +157,8 @@ class TwitterClient:
             data=model_response
         )
 
-    def __hydratate_session(self) -> None:
-        self.request(HTTPMethod.GET, self.base_url, EmptyResponseModel)
-
-        self.__headers.update({
-            'Authorization': f'Bearer {self.__DEFAULT_BEARER_TOKEN}'
-        })
-
+    def __get_guest_token(self) -> None:
+        self.__headers.update({'Authorization': f'Bearer {self.__DEFAULT_BEARER_TOKEN}'})
         guest_response = self.request(HTTPMethod.POST, f"{self.api_base_url_v_1_1}/guest/activate.json", model_type=GuestTokenResponseModel)
 
         if not guest_response.is_success or guest_response.data is None or guest_response.data.guest_token is None:

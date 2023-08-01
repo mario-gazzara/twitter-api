@@ -8,6 +8,7 @@ class CookiesCacheServiceInterface:
     In this way, be using dependency injection, we can easily change the cookies cache service implementation
     and store the cookies in a database, in a remote server, etc.
     """
+
     def save_cookies(self, session: requests.Session, key: str) -> None:
         raise NotImplementedError
 
