@@ -63,12 +63,25 @@ class TwitterTweetsAPIModule:
         if legacy is None:
             return None
 
-        user = tweet_result.core.user_results.result
+        core = tweet_result.core
+
+        if core is None:
+            return None
+
+        user = core.user_results.result
+
+        views = tweet_result.views
+
+        if views is None:
+            return None
+
+        if tweet_result.rest_id is None:
+            return None
 
         return TwitterTweetModel(
             id=legacy.id_str,
             rest_id=tweet_result.rest_id,
-            view_count=tweet_result.views.count,
+            view_count=views.count,
             bookmark_count=legacy.bookmark_count,
             favorite_count=legacy.favorite_count,
             quote_count=legacy.quote_count,

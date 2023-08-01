@@ -101,10 +101,9 @@ class TweetLegacy(BaseModel):
 
 
 class TweetResult(BaseModel):
-    rest_id: str
-    core: Core
-    views: Views
-    source: str
+    rest_id: str | None = None
+    core: Core | None = None
+    views: Views | None = None
     legacy: TweetLegacy | None = None
 
 
