@@ -93,6 +93,7 @@ class TwitterClient:
 
     @property
     def headers(self) -> Dict[str, Any]:
+        self.__headers.update({'x-csrf-token': self.__session.cookies.get('ct0') or ''})
         return self.__headers
 
     @headers.setter
@@ -140,7 +141,7 @@ class TwitterClient:
 
             try:
                 errors_json = response.json()
-                errors = [TwitterAPIErrorResponse(**error) for error in errors_json]
+                errors = [TwitterAPIErrorResponse(**error) for error in errors_json['errors'] if 'errors' in errors_json]
 
             except ValueError:
                 errors = None
@@ -168,10 +169,7 @@ class TwitterClient:
         if not guest_response.is_success or guest_response.data is None or guest_response.data.guest_token is None:
             raise Exception("Failed to hydratate session: missing guest token")
 
-        self.headers.update({
-            'x-guest-token': guest_response.data.guest_token,
-            'x-csrf-token': self.__session.cookies.get("ct0")
-        })
+        self.headers.update({'x-guest-token': guest_response.data.guest_token})
 
     def __deserialize_response_to_model(self, response: requests.Response, model_type: Type[T]) -> T:
         if model_type is EmptyResponseModel:

@@ -38,6 +38,8 @@ class TwitterAuthAPIModule:
         ):
             self.__cookies_cache_service.load_cookies(self.__twitter_client.session, user_id)
 
+            logger.info('Loading cookies from cache...')
+
             self.__is_authenticated = True
             return self.__is_authenticated
 
@@ -60,6 +62,10 @@ class TwitterAuthAPIModule:
 
                 return False
 
+            elif subtask_id is None:
+                logger.warning('Next flow is not defined')
+                return False
+
             next_flow = TW_AUTH_FLOWS_TO_STATES.get(subtask_id) if subtask_id is not None else None
 
             if next_flow is None:
@@ -68,3 +74,5 @@ class TwitterAuthAPIModule:
 
             auth_context.flow_token = flow_token
             auth_context.subtask_id = subtask_id
+
+            auth_context.set_flow(next_flow)

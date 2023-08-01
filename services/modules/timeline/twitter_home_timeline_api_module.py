@@ -95,7 +95,9 @@ class TwitterHomeTimelineAPIModule:
 
         pretty_response = self.__prepare_home_timeline_response(response.data)
 
-        return pretty_response.tweets.sort(key=lambda tweet: tweet.created_at, reverse=sort == 'DESC')
+        pretty_response.tweets.sort(key=lambda tweet: tweet.created_at, reverse=sort == 'DESC')
+
+        return pretty_response
 
     def __prepare_home_timeline_response(self, raw_response: TwitterHomeTimelineResponseRawModel) -> TwitterHomeTimelineResponseModel:
         """
@@ -130,24 +132,29 @@ class TwitterHomeTimelineAPIModule:
                 continue
 
             result = item_content.tweet_results.result
+            legacy = result.legacy
+
+            if legacy is None:
+                continue
 
             user = item_content.tweet_results.result.core.user_results.result
 
             tweets.append(TwitterHomeTimelineTweetModel(
+                id=legacy.id_str,
                 rest_id=result.rest_id,
                 view_count=result.views.count,
-                bookmark_count=result.legacy.bookmark_count,
-                favorite_count=result.legacy.favorite_count,
-                quote_count=result.legacy.quote_count,
-                reply_count=result.legacy.reply_count,
-                retweet_count=result.legacy.retweet_count,
-                favorited=result.legacy.favorited,
-                bookmarked=result.legacy.bookmarked,
-                retweeted=result.legacy.retweeted,
-                content=result.legacy.full_text,
-                lang=result.legacy.lang,
-                created_at=datetime.strptime(result.legacy.created_at, "%a %b %d %H:%M:%S %z %Y"),
-                creator=TwitterHomeTimelineTweetUserModel(
+                bookmark_count=legacy.bookmark_count,
+                favorite_count=legacy.favorite_count,
+                quote_count=legacy.quote_count,
+                reply_count=legacy.reply_count,
+                retweet_count=legacy.retweet_count,
+                favorited=legacy.favorited,
+                bookmarked=legacy.bookmarked,
+                retweeted=legacy.retweeted,
+                content=legacy.full_text,
+                lang=legacy.lang,
+                created_at=datetime.strptime(legacy.created_at, "%a %b %d %H:%M:%S %z %Y"),
+                author=TwitterHomeTimelineTweetUserModel(
                     id=user.id,
                     rest_id=user.rest_id,
                     full_name=user.legacy.name,
@@ -161,8 +168,6 @@ class TwitterHomeTimelineAPIModule:
                     friends_count=user.legacy.friends_count,
                 )
             ))
-
-        tweets.sort(key=lambda tweet: tweet.created_at, reverse=True)
 
         cursor_entries = [entry for entry in entries if entry.entryId.startswith('cursor')]
 

@@ -38,8 +38,8 @@ class TwitterAuthenticationContext:
     user_id: str
     alternate_id: str
     password: str
-    flow_token: str | None
-    subtask_id: str | None
+    flow_token: str | None = None
+    subtask_id: str | None = None
 
     __flow: TwitterAbstractAuthenticationFlow
 
@@ -52,3 +52,6 @@ class TwitterAuthenticationContext:
 
     def handle(self) -> Tuple[str | None, str | None]:
         return self.__flow.handle(self)
+
+    def set_flow(self, flow: TwitterAbstractAuthenticationFlow) -> None:
+        self.__flow = flow

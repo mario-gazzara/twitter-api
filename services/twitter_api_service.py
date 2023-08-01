@@ -17,8 +17,8 @@ logger = get_logger(__name__)
 
 def authenticated(func):
     @wraps(func)
-    def wrapper(self: TwitterAPIService, *args, **kwargs):
-        if self.__twitter_auth_api_module.is_authenticated:
+    def wrapper(self: 'TwitterAPIService', *args, **kwargs):
+        if self.is_authenticated:
             return func(self, *args, **kwargs)
         else:
             raise ValueError("Not authenticated. Please log in before using this method.")
@@ -36,6 +36,10 @@ class TwitterAPIService:
             twitter_home_timeline_api_module: TwitterHomeTimelineAPIModule):
         self.__twitter_home_timeline_api_module = twitter_home_timeline_api_module
         self.__twitter_auth_api_module = twitter_auth_api_module
+
+    @property
+    def is_authenticated(self) -> bool:
+        return self.__twitter_auth_api_module.is_authenticated
 
     def login(self, user_id: str, alternate_id: str, password: str, persist_session: bool = True) -> bool:
         return self.__twitter_auth_api_module.login(user_id, alternate_id, password, persist_session)
