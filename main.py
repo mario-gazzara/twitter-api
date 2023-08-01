@@ -18,9 +18,9 @@ if __name__ == '__main__':
         twitter_home_timeline_api_module = TwitterHomeTimelineAPIModule(twitter_client)
         twitter_api_service = TwitterAPIService(twitter_auth_api_module, twitter_home_timeline_api_module)
 
-        is_authenticated = twitter_api_service.login(user_id, alternate_user_id, password)
+        login_succeded = twitter_api_service.login(user_id, alternate_user_id, password)
 
-        if not is_authenticated:
+        if not login_succeded:
             print('Authentication failed')
             exit(1)
 

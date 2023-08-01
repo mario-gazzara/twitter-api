@@ -12,10 +12,14 @@ from models.twitter_models import EmptyResponseModel, GuestTokenResponseModel
 logger = get_logger(__name__)
 
 
+MIN_WAIT_TIME: int = 1
+MAX_WAIT_TIME: int = 5
+
+
 class TwitterClientOptions(BaseModel):
     proxies: Dict[str, str] | None = None
-    min_wait_time: int = 1
-    max_wait_time: int = 5
+    min_wait_time: int = MIN_WAIT_TIME
+    max_wait_time: int = MAX_WAIT_TIME
 
     @field_validator('min_wait_time', 'max_wait_time')
     @classmethod
@@ -118,18 +122,18 @@ class TwitterClient:
         headers = headers or self.headers
 
         wait_time = random.randint(
-            self.options.min_wait_time if self.options else 1,
-            self.options.max_wait_time if self.options else 5)
+            self.__options.min_wait_time if self.__options else MIN_WAIT_TIME,
+            self.__options.max_wait_time if self.__options else MAX_WAIT_TIME)
 
         time.sleep(wait_time)
 
-        response = self.session.request(
+        response = self.__session.request(
             method.value.lower(),
             url,
             headers=headers,
             params=params,
             json=data,
-            proxies=self.options.proxies if self.options else None)
+            proxies=self.__options.proxies if self.__options else None)
 
         if 400 <= response.status_code and response.status_code < 500:
             logger.warning(f"Request failed with status code {response.status_code} and body {response.text}")

@@ -1,4 +1,4 @@
-# the lines of code below are used to avoid circular imports with type hinting
+# the lines of code below are used to avoid circular imports caused by type hinting
 
 from __future__ import annotations
 
