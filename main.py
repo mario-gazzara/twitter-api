@@ -17,7 +17,7 @@ if __name__ == '__main__':
     )) as twitter_client:
         twitter_auth_api_module = TwitterAuthAPIModule(twitter_client)
         twitter_tweets_api_module = TwitterTweetsAPIModule(twitter_client)
-        twitter_home_timeline_api_module = TwitterHomeTimelineAPIModule(twitter_client)
+        twitter_home_timeline_api_module = TwitterHomeTimelineAPIModule(twitter_client, twitter_tweets_api_module)
 
         twitter_api_service = TwitterAPIService(
             twitter_auth_api_module,
@@ -50,8 +50,10 @@ if __name__ == '__main__':
 
         # Reply to tweet
 
-        reply_tweet_id = twitter_api_service.create_tweet(text_content, tweet.id)
+        reply_tweet_id = twitter_api_service.create_tweet(text_content, tweet.rest_id)
 
         if reply_tweet_id is None:
             print('Failed to reply to tweet')
             exit(0)
+
+        print(f'Replied to tweet {tweet.rest_id} with {reply_tweet_id}')

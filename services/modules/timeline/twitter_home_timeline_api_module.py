@@ -1,5 +1,4 @@
 
-from datetime import datetime
 from http import HTTPMethod
 from typing import Generator, List, Literal
 
@@ -8,10 +7,9 @@ from models.twitter_home_timeline_models import TwitterHomeTimelinePaginationMod
 from models.twitter_home_timeline_models import \
     TwitterHomeTimelineRequestModel as TwtHomeTimelineReqModel
 from models.twitter_home_timeline_models import (
-    TwitterHomeTimelineResponseModel, TwitterHomeTimelineResponseRawModel,
-    TwitterTweetModel
+    TwitterHomeTimelineResponseModel, TwitterHomeTimelineResponseRawModel, TwitterTweetModel
 )
-from models.twitter_tweets_models import TwitterUserModel
+from services.modules.tweets.twitter_tweets_api_module import TwitterTweetsAPIModule
 from twitter_client import TwitterClient
 
 SortType = Literal['ASC', 'DESC']
@@ -21,9 +19,11 @@ logger = get_logger(__name__)
 
 class TwitterHomeTimelineAPIModule:
     __twitter_client: TwitterClient
+    __twitter_tweets_api_module: TwitterTweetsAPIModule
 
-    def __init__(self, twitter_client: TwitterClient):
+    def __init__(self, twitter_client: TwitterClient, twitter_tweets_api_module: TwitterTweetsAPIModule):
         self.__twitter_client = twitter_client
+        self.__twitter_tweets_api_module = twitter_tweets_api_module
 
     def get_home_timeline_tweets_stream(
             self, count: int = 20, cursor: str | None = None, sort: SortType = 'DESC') -> Generator[TwitterTweetModel, None, None]:
@@ -133,42 +133,13 @@ class TwitterHomeTimelineAPIModule:
                 continue
 
             result = item_content.tweet_results.result
-            legacy = result.legacy
 
-            if legacy is None:
+            tweet = self.__twitter_tweets_api_module.build_tweet_response(result)
+
+            if tweet is None:
                 continue
 
-            user = item_content.tweet_results.result.core.user_results.result
-
-            tweets.append(TwitterTweetModel(
-                id=legacy.id_str,
-                rest_id=result.rest_id,
-                view_count=result.views.count,
-                bookmark_count=legacy.bookmark_count,
-                favorite_count=legacy.favorite_count,
-                quote_count=legacy.quote_count,
-                reply_count=legacy.reply_count,
-                retweet_count=legacy.retweet_count,
-                favorited=legacy.favorited,
-                bookmarked=legacy.bookmarked,
-                retweeted=legacy.retweeted,
-                content=legacy.full_text,
-                lang=legacy.lang,
-                created_at=datetime.strptime(legacy.created_at, "%a %b %d %H:%M:%S %z %Y"),
-                author=TwitterUserModel(
-                    id=user.id,
-                    rest_id=user.rest_id,
-                    full_name=user.legacy.name,
-                    description=user.legacy.description,
-                    profile_image_url=user.legacy.profile_image_url_https,
-                    profile_banner_url=user.legacy.profile_banner_url,
-                    verified=user.legacy.verified,
-                    is_blue_verified=user.is_blue_verified,
-                    favourites_count=user.legacy.favourites_count,
-                    followers_count=user.legacy.followers_count,
-                    friends_count=user.legacy.friends_count,
-                )
-            ))
+            tweets.append(tweet)
 
         cursor_entries = [entry for entry in entries if entry.entryId.startswith('cursor')]
 

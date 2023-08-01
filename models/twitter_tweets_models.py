@@ -85,18 +85,10 @@ class Views(BaseModel):
     count: int = 0
 
 
-class TweetEntities(BaseModel):
-    user_mentions: List
-    urls: List
-    hashtags: List
-    symbols: List
-
-
 class TweetLegacy(BaseModel):
     bookmark_count: int = 0
     bookmarked: bool
     created_at: str
-    entities: TweetEntities
     favorite_count: int = 0
     full_text: str
     favorited: bool
