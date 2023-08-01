@@ -4,13 +4,12 @@ from functools import wraps
 from typing import Generator
 
 from logger import get_logger
-from models.twitter_home_timeline_models import (
-    TwitterHomeTimelineResponseModel, TwitterHomeTimelineTweetModel
-)
+from models.twitter_home_timeline_models import TwitterHomeTimelineResponseModel, TwitterTweetModel
 from services.modules.auth.twitter_auth_api_module import TwitterAuthAPIModule
 from services.modules.timeline.twitter_home_timeline_api_module import (
     SortType, TwitterHomeTimelineAPIModule
 )
+from services.modules.tweets.twitter_tweets_api_module import TwitterTweetsAPIModule
 
 logger = get_logger(__name__)
 
@@ -28,13 +27,16 @@ def authenticated(func):
 
 class TwitterAPIService:
     __twitter_auth_api_module: TwitterAuthAPIModule
+    __twitter_tweets_api_module: TwitterTweetsAPIModule
     __twitter_home_timeline_api_module: TwitterHomeTimelineAPIModule
 
     def __init__(
             self,
             twitter_auth_api_module: TwitterAuthAPIModule,
+            twitter_tweets_api_module: TwitterTweetsAPIModule,
             twitter_home_timeline_api_module: TwitterHomeTimelineAPIModule):
         self.__twitter_home_timeline_api_module = twitter_home_timeline_api_module
+        self.__twitter_tweets_api_module = twitter_tweets_api_module
         self.__twitter_auth_api_module = twitter_auth_api_module
 
     @property
@@ -46,7 +48,7 @@ class TwitterAPIService:
 
     @authenticated
     def get_home_timeline_tweets_stream(
-            self, count: int = 20, cursor: str | None = None, sort: SortType = 'DESC') -> Generator[TwitterHomeTimelineTweetModel, None, None]:
+            self, count: int = 20, cursor: str | None = None, sort: SortType = 'DESC') -> Generator[TwitterTweetModel, None, None]:
         return self.__twitter_home_timeline_api_module.get_home_timeline_tweets_stream(count, cursor, sort)
 
     @authenticated
@@ -57,3 +59,7 @@ class TwitterAPIService:
     @authenticated
     def get_home_timeline(self, count: int = 20, cursor: str | None = None, sort: SortType = 'DESC') -> TwitterHomeTimelineResponseModel | None:
         return self.__twitter_home_timeline_api_module.get_home_timeline(count, cursor, sort)
+
+    @authenticated
+    def create_tweet(self, content: str, in_reply_to_tweet_id: str | None = None) -> str | None:
+        return self.__twitter_tweets_api_module.create_tweet(content, in_reply_to_tweet_id)

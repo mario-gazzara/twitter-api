@@ -9,8 +9,9 @@ from models.twitter_home_timeline_models import \
     TwitterHomeTimelineRequestModel as TwtHomeTimelineReqModel
 from models.twitter_home_timeline_models import (
     TwitterHomeTimelineResponseModel, TwitterHomeTimelineResponseRawModel,
-    TwitterHomeTimelineTweetModel, TwitterHomeTimelineTweetUserModel
+    TwitterTweetModel
 )
+from models.twitter_tweets_models import TwitterUserModel
 from twitter_client import TwitterClient
 
 SortType = Literal['ASC', 'DESC']
@@ -25,7 +26,7 @@ class TwitterHomeTimelineAPIModule:
         self.__twitter_client = twitter_client
 
     def get_home_timeline_tweets_stream(
-            self, count: int = 20, cursor: str | None = None, sort: SortType = 'DESC') -> Generator[TwitterHomeTimelineTweetModel, None, None]:
+            self, count: int = 20, cursor: str | None = None, sort: SortType = 'DESC') -> Generator[TwitterTweetModel, None, None]:
         """
         Get a stream of home timeline tweets pages, sorted by created_at, default is from newest to oldest.
         Please note that you need to be authenticated to use this method.
@@ -122,7 +123,7 @@ class TwitterHomeTimelineAPIModule:
         if len(entries) == 0:
             return empty_response
 
-        tweets: List[TwitterHomeTimelineTweetModel] = []
+        tweets: List[TwitterTweetModel] = []
         tweet_entries_raw = [entry for entry in entries if entry.entryId.startswith('tweet')]
 
         for tweet_entry_raw in tweet_entries_raw:
@@ -139,7 +140,7 @@ class TwitterHomeTimelineAPIModule:
 
             user = item_content.tweet_results.result.core.user_results.result
 
-            tweets.append(TwitterHomeTimelineTweetModel(
+            tweets.append(TwitterTweetModel(
                 id=legacy.id_str,
                 rest_id=result.rest_id,
                 view_count=result.views.count,
@@ -154,7 +155,7 @@ class TwitterHomeTimelineAPIModule:
                 content=legacy.full_text,
                 lang=legacy.lang,
                 created_at=datetime.strptime(legacy.created_at, "%a %b %d %H:%M:%S %z %Y"),
-                author=TwitterHomeTimelineTweetUserModel(
+                author=TwitterUserModel(
                     id=user.id,
                     rest_id=user.rest_id,
                     full_name=user.legacy.name,
