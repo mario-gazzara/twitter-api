@@ -2,6 +2,7 @@ import os
 import pickle
 from datetime import datetime
 from http.cookiejar import CookieJar
+from typing import List
 
 import requests
 
@@ -48,7 +49,7 @@ class LocalCookiesCacheService(CookiesCacheServiceInterface):
 
         self.save_cookies(session, key)
 
-    def are_cookies_valid(self, key: str) -> bool:
+    def are_cookies_valid(self, key: str, cookies_to_check: List[str] | None = None) -> bool:
         try:
             with open(self.build_path(key), 'rb') as f:
                 cookies: CookieJar = pickle.load(f)
@@ -56,8 +57,11 @@ class LocalCookiesCacheService(CookiesCacheServiceInterface):
             return False
 
         for cookie in cookies:
+            if cookies_to_check and cookie.name not in cookies_to_check:
+                continue
+
             if cookie.expires and cookie.expires <= datetime.utcnow().timestamp():
-                logger.info("Cookie expired")
+                logger.warning("Cookie expired")
                 return False
 
         return True

@@ -34,7 +34,9 @@ class TwitterAuthAPIModule:
         if (
             persist_session and
             self.__cookies_cache_service.cookies_exists(user_id) and
-            self.__cookies_cache_service.are_cookies_valid(user_id)
+            self.__cookies_cache_service.are_cookies_valid(user_id, cookies_to_check=[
+                'auth_token', 'ct0', 'guest_id', 'kdt', 'twid'
+            ])
         ):
             self.__cookies_cache_service.load_cookies(self.__twitter_client.session, user_id)
 

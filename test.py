@@ -30,7 +30,8 @@ def init(twitter_api_service: TwitterAPIService = Provide[TwitterContainer.twitt
         logger.error('Home timeline is empty')
         return
 
-    # tweet = timeline.tweets[0]
+    tweet = timeline.tweets[0]
+    print(tweet.model_dump_json())
 
     # text_content = "Hello guys"
 

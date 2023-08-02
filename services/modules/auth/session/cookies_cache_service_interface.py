@@ -1,4 +1,5 @@
 
+from typing import List
 import requests
 
 
@@ -24,5 +25,5 @@ class CookiesCacheServiceInterface:
     def refresh_cookies(self, session: requests.Session, key: str):
         raise NotImplementedError
 
-    def are_cookies_valid(self, key: str) -> bool:
+    def are_cookies_valid(self, key: str, cookies_to_check: List[str] | None = None) -> bool:
         raise NotImplementedError
