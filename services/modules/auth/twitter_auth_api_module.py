@@ -1,3 +1,6 @@
+from http import HTTPMethod
+import json
+
 from logger import get_logger
 from services.modules.auth.session.cookies_cache_service_interface import (
     CookiesCacheServiceInterface
@@ -53,6 +56,9 @@ class TwitterAuthAPIModule:
             if subtask_id == TwitterAuthFlows.LOGIN_SUCCESS_SUBTASK.value:
                 logger.info('Successfully authenticated')
 
+                if not self.get_viewer():
+                    logger.warning('Could not get viewer: crsf token with a short expiration time will be used')
+
                 if persist_session:
                     self.__cookies_cache_service.save_cookies(self.__twitter_client.session, user_id)
 
@@ -78,3 +84,32 @@ class TwitterAuthAPIModule:
             auth_context.subtask_id = subtask_id
 
             auth_context.set_flow(next_flow)
+
+    def get_viewer(self):
+        """
+        This method is only used to request a new csrf token with a longer expiration time (1 year)
+        """
+        query_id = "5wNTkTJmk8GZlJmd2rL7eQ"
+        endpoint = f'{self.__twitter_client.gql_url}/{query_id}/Viewer'
+
+        # json.dumps is used to convert python dict to json string (required by twitter api to correctly parse variables)
+        params = {
+            'variables': json.dumps({
+                "withCommunitiesMemberships": True,
+                "withSubscribedTab": True,
+                "withCommunitiesCreation": True
+            }),
+            'features': json.dumps({
+                "responsive_web_graphql_exclude_directive_enabled": True,
+                "verified_phone_label_enabled": False,
+                "responsive_web_graphql_skip_user_profile_image_extensions_enabled": False,
+                "responsive_web_graphql_timeline_navigation_enabled": True
+            }),
+            'fieldToggles': json.dumps({
+                "withAuxiliaryUserLabels": False
+            })
+        }
+
+        response = self.__twitter_client.request(HTTPMethod.GET, endpoint, params=params)
+
+        return response.is_success

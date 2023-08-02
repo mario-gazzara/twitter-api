@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "twitter-api"
+version = "0.1.0"
+description = ""
+authors = ["Mario Gazzara <mario.gazzara@herakel.com>"]
+readme = "README.md"
+packages = [{include = "twitter_api"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+dependency-injector = "^4.41.0"
+pydantic = "^2.1.1"
+requests = "^2.31.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

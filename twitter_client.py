@@ -116,7 +116,7 @@ class TwitterClient:
             self,
             method: HTTPMethod,
             url: str,
-            model_type: Type[T],
+            model_type: Type[T] = EmptyResponseModel,
             headers: Dict[str, Any] | None = None,
             params: Dict[str, Any] | None = None,
             data: Dict[str, Any] | None = None) -> 'TwitterAPIResponse[T]':
@@ -136,8 +136,10 @@ class TwitterClient:
             json=data,
             proxies=self.__options.proxies if self.__options else None)
 
+        logger.debug(f"Request to {response.url} with method {method.value} and body {data or 'null'} returned status code {response.status_code}")
+
         if 400 <= response.status_code and response.status_code < 500:
-            logger.warning(f"Request failed with status code {response.status_code} and body {response.text}")
+            logger.warning(f"Request failed with status code {response.status_code} and body {response.text or 'null'}")
 
             try:
                 errors_json = response.json()
