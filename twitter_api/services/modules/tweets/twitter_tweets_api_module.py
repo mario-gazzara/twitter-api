@@ -6,7 +6,7 @@ from twitter_api.models.twitter_tweets_models import (
     Reply, TweetResult, TwitterCreateTweetRequestModel, TwitterTweetModel,
     TwitterTweetResponseModel, TwitterUserModel, Variables
 )
-from twitter_client import TwitterClient
+from twitter_api.twitter_client import TwitterClient
 
 logger = get_logger(__name__)
 
