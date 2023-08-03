@@ -6,8 +6,8 @@ from typing import List
 
 import requests
 
-from logger import get_logger
-from services.modules.auth.session.cookies_cache_service_interface import (
+from twitter_api.logger import get_logger
+from twitter_api.services.modules.auth.session.cookies_cache_service_interface import (
     CookiesCacheServiceInterface
 )
 

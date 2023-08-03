@@ -1,8 +1,8 @@
 from datetime import datetime
 from http import HTTPMethod
 
-from logger import get_logger
-from models.twitter_tweets_models import (
+from twitter_api.logger import get_logger
+from twitter_api.models.twitter_tweets_models import (
     Reply, TweetResult, TwitterCreateTweetRequestModel, TwitterTweetModel,
     TwitterTweetResponseModel, TwitterUserModel, Variables
 )

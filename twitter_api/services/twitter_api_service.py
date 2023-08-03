@@ -4,9 +4,9 @@ from functools import wraps
 from typing import Generator
 
 from logger import get_logger
-from models.twitter_home_timeline_models import TwitterHomeTimelineResponseModel, TwitterTweetModel
-from services.modules.auth.twitter_auth_api_module import TwitterAuthAPIModule
-from services.modules.timeline.twitter_home_timeline_api_module import (
+from twitter_api.models.twitter_home_timeline_models import TwitterHomeTimelineResponseModel, TwitterTweetModel
+from twitter_api.services.modules.auth.twitter_auth_api_module import TwitterAuthAPIModule
+from twitter_api.services.modules.timeline.twitter_home_timeline_api_module import (
     SortType, TwitterHomeTimelineAPIModule
 )
 from services.modules.tweets.twitter_tweets_api_module import TwitterTweetsAPIModule

@@ -2,13 +2,13 @@
 import enum
 from typing import Dict, Tuple
 
-from logger import get_logger
-from services.modules.auth.twitter_auth_flows import (
+from twitter_api.logger import get_logger
+from twitter_api.services.modules.auth.twitter_auth_flows import (
     LoginJsInstrumentationSubtaskFlow, TwitterAbstractAuthenticationFlow,
     TwitterAccountDuplicationCheckFlow, TwitterEnterAlternateIdentifierFlow,
     TwitterEnterPasswordFlow, TwitterEnterUserIdentifierSSOFlow, TwitterInitAuthFlow
 )
-from twitter_client import TwitterClient
+from twitter_api.twitter_client import TwitterClient
 
 logger = get_logger(__name__)
 

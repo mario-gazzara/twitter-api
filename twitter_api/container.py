@@ -1,11 +1,11 @@
 from dependency_injector import containers, providers
 
-from services.modules.auth.session.local_cookies_cache_service import LocalCookiesCacheService
-from services.modules.auth.twitter_auth_api_module import TwitterAuthAPIModule
-from services.modules.timeline.twitter_home_timeline_api_module import TwitterHomeTimelineAPIModule
-from services.modules.tweets.twitter_tweets_api_module import TwitterTweetsAPIModule
-from services.twitter_api_service import TwitterAPIService
-from twitter_client import TwitterClient, TwitterClientOptions
+from twitter_api.services.modules.auth.session.local_cookies_cache_service import LocalCookiesCacheService
+from twitter_api.services.modules.auth.twitter_auth_api_module import TwitterAuthAPIModule
+from twitter_api.services.modules.timeline.twitter_home_timeline_api_module import TwitterHomeTimelineAPIModule
+from twitter_api.services.modules.tweets.twitter_tweets_api_module import TwitterTweetsAPIModule
+from twitter_api.services.twitter_api_service import TwitterAPIService
+from twitter_api.twitter_client import TwitterClient, TwitterClientOptions
 
 
 def init_twitter_client(min_wait_time: int, max_wait_time: int):

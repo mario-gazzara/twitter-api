@@ -3,9 +3,9 @@ import sys
 
 from dependency_injector.wiring import Provide, inject
 
-from container import TwitterContainer
-from logger import get_logger
-from services.twitter_api_service import TwitterAPIService
+from twitter_api.container import TwitterContainer
+from twitter_api.logger import get_logger
+from twitter_api.services.twitter_api_service import TwitterAPIService
 
 logger = get_logger(__name__)
 

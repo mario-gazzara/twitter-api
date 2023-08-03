@@ -14,9 +14,9 @@ import json
 from http import HTTPMethod
 from typing import Any, Dict
 
-from logger import get_logger
-from models.twitter_models import TwitterFlowResponseModel
-from utils import deep_merge
+from twitter_api.logger import get_logger
+from twitter_api.models.twitter_models import TwitterFlowResponseModel
+from twitter_api.utils import deep_merge
 
 logger = get_logger(__name__)
 

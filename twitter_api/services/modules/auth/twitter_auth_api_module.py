@@ -1,12 +1,12 @@
 from http import HTTPMethod
 import json
 
-from logger import get_logger
-from services.modules.auth.session.cookies_cache_service_interface import (
+from twitter_api.logger import get_logger
+from twitter_api.services.modules.auth.session.cookies_cache_service_interface import (
     CookiesCacheServiceInterface
 )
-from services.modules.auth.session.local_cookies_cache_service import LocalCookiesCacheService
-from services.modules.auth.twitter_auth_context import (
+from twitter_api.services.modules.auth.session.local_cookies_cache_service import LocalCookiesCacheService
+from twitter_api.services.modules.auth.twitter_auth_context import (
     TW_AUTH_FLOWS_TO_STATES, TwitterAuthenticationContext, TwitterAuthFlows
 )
 from twitter_client import TwitterClient

@@ -2,15 +2,15 @@
 from http import HTTPMethod
 from typing import Generator, List, Literal
 
-from logger import get_logger
-from models.twitter_home_timeline_models import TwitterHomeTimelinePaginationModel
-from models.twitter_home_timeline_models import \
+from twitter_api.logger import get_logger
+from twitter_api.models.twitter_home_timeline_models import TwitterHomeTimelinePaginationModel
+from twitter_api.models.twitter_home_timeline_models import \
     TwitterHomeTimelineRequestModel as TwtHomeTimelineReqModel
-from models.twitter_home_timeline_models import (
+from twitter_api.models.twitter_home_timeline_models import (
     TwitterHomeTimelineResponseModel, TwitterHomeTimelineResponseRawModel, TwitterTweetModel
 )
-from services.modules.tweets.twitter_tweets_api_module import TwitterTweetsAPIModule
-from twitter_client import TwitterClient
+from twitter_api.services.modules.tweets.twitter_tweets_api_module import TwitterTweetsAPIModule
+from twitter_api.twitter_client import TwitterClient
 
 SortType = Literal['ASC', 'DESC']
 

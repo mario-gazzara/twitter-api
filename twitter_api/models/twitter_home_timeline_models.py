@@ -8,7 +8,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel
 
-from models.twitter_tweets_models import TweetResult, TwitterTweetModel
+from twitter_api.models.twitter_tweets_models import TweetResult, TwitterTweetModel
 
 
 class TwitterHomeTimelineRequestModel(BaseModel):

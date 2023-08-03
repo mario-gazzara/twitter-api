@@ -6,8 +6,8 @@ from typing import Any, Dict, Generic, List, Type, TypeVar
 import requests
 from pydantic import BaseModel, FieldValidationInfo, field_validator
 
-from logger import get_logger
-from models.twitter_models import EmptyResponseModel, GuestTokenResponseModel
+from twitter_api.logger import get_logger
+from twitter_api.models.twitter_models import EmptyResponseModel, GuestTokenResponseModel
 
 logger = get_logger(__name__)
 
