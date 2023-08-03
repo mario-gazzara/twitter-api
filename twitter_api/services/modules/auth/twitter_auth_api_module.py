@@ -9,7 +9,7 @@ from twitter_api.services.modules.auth.session.local_cookies_cache_service impor
 from twitter_api.services.modules.auth.twitter_auth_context import (
     TW_AUTH_FLOWS_TO_STATES, TwitterAuthenticationContext, TwitterAuthFlows
 )
-from twitter_client import TwitterClient
+from twitter_api.twitter_client import TwitterClient
 
 logger = get_logger(__name__)
 
