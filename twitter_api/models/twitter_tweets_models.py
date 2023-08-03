@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List
 
-from pydantic import BaseModel
+from pydantic import BaseModel, computed_field
 
 
 class MediaEntity(BaseModel):
@@ -153,3 +153,8 @@ class TwitterTweetModel(BaseModel):
     lang: str
     created_at: datetime
     author: TwitterUserModel
+
+    @computed_field
+    @property
+    def uri(self) -> str:
+        return f"https://twitter.com/{self.author.full_name}/status/{self.rest_id}"
