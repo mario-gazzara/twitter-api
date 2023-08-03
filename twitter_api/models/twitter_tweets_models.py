@@ -61,6 +61,7 @@ class UserLegacy(BaseModel):
     followers_count: int = 0
     friends_count: int = 0
     name: str
+    screen_name: str
     profile_banner_url: str | None = None
     profile_image_url_https: str
     verified: bool
@@ -127,6 +128,7 @@ class TwitterUserModel(BaseModel):
     id: str
     rest_id: str
     full_name: str
+    username: str
     description: str | None
     profile_image_url: str | None
     profile_banner_url: str | None = None
@@ -157,4 +159,4 @@ class TwitterTweetModel(BaseModel):
     @computed_field
     @property
     def uri(self) -> str:
-        return f"https://twitter.com/{self.author.full_name}/status/{self.rest_id}"
+        return f"https://twitter.com/{self.author.username}/status/{self.rest_id}"
