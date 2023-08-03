@@ -97,6 +97,7 @@ class TwitterTweetsAPIModule:
                 id=user.id,
                 rest_id=user.rest_id,
                 full_name=user.legacy.name,
+                username=user.legacy.screen_name,
                 description=user.legacy.description,
                 profile_image_url=user.legacy.profile_image_url_https,
                 profile_banner_url=user.legacy.profile_banner_url,
