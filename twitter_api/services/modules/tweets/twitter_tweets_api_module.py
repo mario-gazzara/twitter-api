@@ -58,25 +58,19 @@ class TwitterTweetsAPIModule:
         return response.data.data.create_tweet.tweet_results.result.rest_id
 
     def build_tweet_response(self, tweet_result: TweetResult) -> TwitterTweetModel | None:
+        if (
+            tweet_result.legacy is None or
+            tweet_result.core is None or
+            tweet_result.core is None or
+            tweet_result.views is None or
+            tweet_result.rest_id is None
+        ):
+            return None
+
         legacy = tweet_result.legacy
-
-        if legacy is None:
-            return None
-
         core = tweet_result.core
-
-        if core is None:
-            return None
-
         user = core.user_results.result
-
         views = tweet_result.views
-
-        if views is None:
-            return None
-
-        if tweet_result.rest_id is None:
-            return None
 
         return TwitterTweetModel(
             id=legacy.id_str,

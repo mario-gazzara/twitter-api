@@ -57,13 +57,13 @@ class TwitterCreateTweetRequestModel(BaseModel):
 
 class UserLegacy(BaseModel):
     description: str
-    favourites_count: int = 0
-    followers_count: int = 0
-    friends_count: int = 0
+    favourites_count: int | None = 0
+    followers_count: int | None = 0
+    friends_count: int | None = 0
     name: str
     screen_name: str
     profile_banner_url: str | None = None
-    profile_image_url_https: str
+    profile_image_url_https: str | None
     verified: bool
 
 
@@ -83,20 +83,20 @@ class Core(BaseModel):
 
 
 class Views(BaseModel):
-    count: int = 0
+    count: int | None = 0
 
 
 class TweetLegacy(BaseModel):
-    bookmark_count: int = 0
+    bookmark_count: int | None = 0
     bookmarked: bool
     created_at: str
-    favorite_count: int = 0
+    favorite_count: int | None = 0
     full_text: str
     favorited: bool
     lang: str
-    quote_count: int = 0
-    reply_count: int = 0
-    retweet_count: int = 0
+    quote_count: int | None = 0
+    reply_count: int | None = 0
+    retweet_count: int | None = 0
     retweeted: bool
     id_str: str
 
@@ -134,20 +134,20 @@ class TwitterUserModel(BaseModel):
     profile_banner_url: str | None = None
     verified: bool
     is_blue_verified: bool
-    favourites_count: int
-    followers_count: int
-    friends_count: int
+    favourites_count: int | None
+    followers_count: int | None
+    friends_count: int | None
 
 
 class TwitterTweetModel(BaseModel):
     id: str
     rest_id: str
-    view_count: int
-    bookmark_count: int
-    favorite_count: int
-    quote_count: int
-    reply_count: int
-    retweet_count: int
+    view_count: int | None
+    bookmark_count: int | None
+    favorite_count: int | None
+    quote_count: int | None
+    reply_count: int | None
+    retweet_count: int | None
     favorited: bool
     bookmarked: bool
     retweeted: bool
