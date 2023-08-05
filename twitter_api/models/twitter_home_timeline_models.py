@@ -15,7 +15,7 @@ class TwitterHomeTimelineRequestModel(BaseModel):
     class VariablesModel(BaseModel):
         count: int = 20
         cursor: str | None = None
-        includePromotedContent: bool = True
+        includePromotedContent: bool = False  # exclude promoted tweets
         latestControlAvailable: bool = True
         requestContext: str = "launch"
         withCommunity: bool = True
