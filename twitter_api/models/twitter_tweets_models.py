@@ -109,15 +109,15 @@ class TweetResult(BaseModel):
 
 
 class TweetResults(BaseModel):
-    result: TweetResult
+    result: TweetResult | None = None
 
 
 class CreateTweet(BaseModel):
-    tweet_results: TweetResults
+    tweet_results: TweetResults | None = None
 
 
 class Data(BaseModel):
-    create_tweet: CreateTweet
+    create_tweet: CreateTweet | None = None
 
 
 class TwitterTweetResponseModel(BaseModel):

@@ -55,7 +55,12 @@ class TwitterTweetsAPIModule:
 
             return None
 
-        return response.data.data.create_tweet.tweet_results.result.rest_id
+        if (
+            response.data.data.create_tweet and response.data.data.create_tweet.tweet_results and response.data.data.create_tweet.tweet_results.result
+        ):
+            return response.data.data.create_tweet.tweet_results.result.rest_id
+
+        return None
 
     def build_tweet_response(self, tweet_result: TweetResult) -> TwitterTweetModel | None:
         if (
