@@ -156,3 +156,18 @@ class TwitterAccountDuplicationCheckFlow(TwitterAbstractAuthenticationFlow):
                 }
             ],
         }
+
+
+class TwitterLoginACIDFlow(TwitterAbstractAuthenticationFlow):
+    def build_payload(self, context: TwitterAuthenticationContext) -> Dict[str, Any]:
+        return {
+            "subtask_inputs": [
+                {
+                    "subtask_id": context.subtask_id,
+                    "enter_text": {
+                        "text": context.acid,
+                        "link": "next_link"
+                    }
+                }
+            ]
+        }
