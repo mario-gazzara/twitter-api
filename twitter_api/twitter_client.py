@@ -136,7 +136,9 @@ class TwitterClient:
             json=data,
             proxies=self.__options.proxies if self.__options else None)
 
-        logger.debug(f"Request to {response.url} with method {method.value} and body {data or 'null'} returned status code {response.status_code}")
+        logger.debug(
+            f"Request to {response.url} with method {method.value} and body {data or 'null'}" +
+            f"returned status code {response.status_code}. Response: {response.text if response.text and len(response.text) < 5000 else 'null'}")
 
         if 400 <= response.status_code and response.status_code < 500:
             logger.warning(f"Request failed with status code {response.status_code} and body {response.text or 'null'}")
