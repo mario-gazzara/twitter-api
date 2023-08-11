@@ -13,6 +13,7 @@ from twitter_api.twitter_client import TwitterClient
 logger = get_logger(__name__)
 
 
+#  TODO: add support for LoginACID flow (it might be the phone number verification flow)
 class TwitterAuthFlows(str, enum.Enum):
     LOGIN_JS_INSTRUMENTATION_SUBTASK = 'LoginJsInstrumentationSubtask'
     LOGIN_ENTER_USER_IDENTIFIER_SSO = 'LoginEnterUserIdentifierSSO'
