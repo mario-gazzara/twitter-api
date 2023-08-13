@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import Any, Dict, List
 
 from pydantic import BaseModel, computed_field
 
@@ -97,6 +97,7 @@ class TweetLegacy(BaseModel):
     quote_count: int | None = 0
     reply_count: int | None = 0
     retweet_count: int | None = 0
+    retweeted_status_result: Dict[str, Any] | None = None
     retweeted: bool
     id_str: str
 
@@ -142,6 +143,7 @@ class TwitterUserModel(BaseModel):
 class TwitterTweetModel(BaseModel):
     id: str
     rest_id: str
+    is_retweet: bool
     view_count: int | None
     bookmark_count: int | None
     favorite_count: int | None

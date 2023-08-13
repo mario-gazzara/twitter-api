@@ -100,7 +100,8 @@ class TwitterHomeTimelineAPIModule:
 
         return pretty_response
 
-    def __prepare_home_timeline_response(self, raw_response: TwitterHomeTimelineResponseRawModel) -> TwitterHomeTimelineResponseModel:
+    def __prepare_home_timeline_response(
+            self, raw_response: TwitterHomeTimelineResponseRawModel) -> TwitterHomeTimelineResponseModel:
         """
         Prepare home timeline response to be more readable.
         """
@@ -136,8 +137,7 @@ class TwitterHomeTimelineAPIModule:
 
             tweet = self.__twitter_tweets_api_module.build_tweet_response(result)
 
-            # exclude retweets
-            if tweet is None or 'RT @' in tweet.content:
+            if tweet is None:
                 continue
 
             tweets.append(tweet)

@@ -80,6 +80,7 @@ class TwitterTweetsAPIModule:
         return TwitterTweetModel(
             id=legacy.id_str,
             rest_id=tweet_result.rest_id,
+            is_retweet=legacy.retweeted_status_result is not None,
             view_count=views.count,
             bookmark_count=legacy.bookmark_count,
             favorite_count=legacy.favorite_count,
