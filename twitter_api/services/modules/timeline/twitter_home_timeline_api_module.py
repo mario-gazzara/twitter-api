@@ -136,7 +136,8 @@ class TwitterHomeTimelineAPIModule:
 
             tweet = self.__twitter_tweets_api_module.build_tweet_response(result)
 
-            if tweet is None:
+            # exclude retweets
+            if tweet is None or 'RT @' in tweet.content:
                 continue
 
             tweets.append(tweet)
