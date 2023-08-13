@@ -45,8 +45,8 @@ class TwitterAPIService:
     def is_authenticated(self) -> bool:
         return self.__twitter_auth_api_module.is_authenticated
 
-    def login(self, user_id: str, alternate_id: str, password: str, acid: str, persist_session: bool = True) -> bool:
-        return self.__twitter_auth_api_module.login(user_id, alternate_id, password, acid, persist_session)
+    def login(self, user_id: str, alternate_id: str, password: str, persist_session: bool = True) -> bool:
+        return self.__twitter_auth_api_module.login(user_id, alternate_id, password, persist_session)
 
     @authenticated
     def get_home_timeline_tweets_stream(

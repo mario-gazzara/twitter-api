@@ -30,7 +30,7 @@ class TwitterAuthAPIModule:
     def is_authenticated(self) -> bool:
         return self.__is_authenticated
 
-    def login(self, user_id: str, alternate_id: str, password: str, acid: str, persist_session: bool = True) -> bool:
+    def login(self, user_id: str, alternate_id: str, password: str, persist_session: bool = True) -> bool:
         """
         Login to twitter account, persist session by default using cookies cache service with local strategy
         """
@@ -48,7 +48,7 @@ class TwitterAuthAPIModule:
             self.__is_authenticated = True
             return self.__is_authenticated
 
-        auth_context = TwitterAuthenticationContext(self.__twitter_client, user_id, alternate_id, password, acid)
+        auth_context = TwitterAuthenticationContext(self.__twitter_client, user_id, alternate_id, password)
 
         while True:
             flow_token, subtask_id = auth_context.handle()

@@ -12,7 +12,7 @@ logger = get_logger(__name__)
 
 @inject
 def init(twitter_api_service: TwitterAPIService = Provide[TwitterContainer.twitter_api_service]):
-    login_succeded = twitter_api_service.login(user_id, alternate_user_id, password, acid='')
+    login_succeded = twitter_api_service.login(user_id, alternate_user_id, password)
 
     if not login_succeded:
         logger.error('Authentication failed')
