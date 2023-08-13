@@ -1,11 +1,13 @@
-from http import HTTPMethod
 import json
+from http import HTTPMethod
 
 from twitter_api.logger import get_logger
 from twitter_api.services.modules.auth.session.cookies_cache_service_interface import (
     CookiesCacheServiceInterface
 )
-from twitter_api.services.modules.auth.session.local_cookies_cache_service import LocalCookiesCacheService
+from twitter_api.services.modules.auth.session.local_cookies_cache_service import (
+    LocalCookiesCacheService
+)
 from twitter_api.services.modules.auth.twitter_auth_context import (
     TW_AUTH_FLOWS_TO_STATES, TwitterAuthenticationContext, TwitterAuthFlows
 )
@@ -30,7 +32,7 @@ class TwitterAuthAPIModule:
     def is_authenticated(self) -> bool:
         return self.__is_authenticated
 
-    def login(self, user_id: str, alternate_id: str, password: str, persist_session: bool = True) -> bool:
+    def login(self, user_id: str, alternate_id: str, password: str, persist_session: bool = True, auto_auth: bool = True) -> bool:
         """
         Login to twitter account, persist session by default using cookies cache service with local strategy
         """
@@ -46,7 +48,12 @@ class TwitterAuthAPIModule:
             logger.info('Loading cookies from cache...')
 
             self.__is_authenticated = True
+
             return self.__is_authenticated
+
+        if not auto_auth:
+            logger.warning('Auto auth disabled, exiting...')
+            return False
 
         auth_context = TwitterAuthenticationContext(self.__twitter_client, user_id, alternate_id, password)
 
