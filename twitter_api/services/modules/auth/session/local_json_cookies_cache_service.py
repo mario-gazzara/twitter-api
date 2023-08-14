@@ -1,5 +1,7 @@
 import json
 import os
+from datetime import datetime
+from http.cookiejar import CookieJar
 from typing import List
 
 import requests
@@ -31,7 +33,7 @@ class LocalCookiesCacheService(CookiesCacheServiceInterface):
         cookies = []
 
         for cookie in session.cookies:
-            cookies.append({
+            cookie_dict = {
                 'version': cookie.version,
                 'name': cookie.name,
                 'value': cookie.value,
@@ -44,22 +46,47 @@ class LocalCookiesCacheService(CookiesCacheServiceInterface):
                 'comment': cookie.comment,
                 'comment_url': cookie.comment_url,
                 'rfc2109': cookie.rfc2109,
-            })
+            }
+
+            cookies.append(cookie_dict)
 
         with open(self.build_path(key), 'w') as f:
             json.dump(cookies, f)
 
     def load_cookies(self, session: requests.Session, key: str) -> None:
-        raise NotImplementedError()
+        with open(self.build_path(key), 'rb') as f:
+            for cookie in json.load(f):
+                session.cookies.set_cookie(
+                    requests.cookies.create_cookie(**cookie)  # type: ignore
+                )
 
     def are_cookies_valid(self, key: str, cookies_to_check: List[str] | None = None) -> bool:
-        raise NotImplementedError
+        try:
+            cookies = CookieJar()
+            with open(self.build_path(key), 'rb') as f:
+                for cookie in json.load(f):
+                    cookies.set_cookie(requests.cookies.create_cookie(**cookie))  # type: ignore
+
+            for cookie in cookies:
+                if cookies_to_check and cookie.name not in cookies_to_check:
+                    continue
+
+                if cookie.expires and cookie.expires <= datetime.utcnow().timestamp():
+                    logger.warning("Cookie expired")
+                    return False
+
+            return True
+        except (FileNotFoundError, EOFError):
+            return False
 
     def refresh_cookies(self, session: requests.Session, key: str):
-        raise NotImplementedError
+        if self.cookies_exists(key):
+            self.delete_cookies(key)
+
+        self.save_cookies(session, key)
 
     def cookies_exists(self, key: str) -> bool:
-        raise NotImplementedError
+        return os.path.exists(self.build_path(key))
 
     def delete_cookies(self, key: str) -> None:
-        raise NotImplementedError
+        os.remove(self.build_path(key))
