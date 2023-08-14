@@ -73,7 +73,7 @@ class Entry(BaseModel):
 
 
 class Instruction(BaseModel):
-    entries: List[Entry]
+    entries: List[Entry] = []
 
 
 class HomeTimelineUrt(BaseModel):
