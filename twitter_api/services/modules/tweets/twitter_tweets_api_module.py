@@ -127,7 +127,7 @@ class TwitterTweetsAPIModule:
             model_type=FavoriteTweetResponse
         )
 
-        if not response.is_success or response.data is None:
+        if not response.is_success or response.data is None or response.data.data.favorite_tweet.lower() != 'done':
             logger.error('Failed to favorite tweet')
 
             logger.error(f'Response status code: {response.status_code}')

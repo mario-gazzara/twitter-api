@@ -174,7 +174,7 @@ class FavoriteTweetRequest(BaseModel):
 
 
 class FavoriteTweetDataResponse(BaseModel):
-    favorite_tweet: bool
+    favorite_tweet: str
 
 
 class FavoriteTweetResponse(BaseModel):
