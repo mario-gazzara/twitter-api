@@ -3,8 +3,9 @@ from http import HTTPMethod
 
 from twitter_api.logger import get_logger
 from twitter_api.models.twitter_tweets_models import (
-    Reply, TweetResult, TwitterCreateTweetRequestModel, TwitterTweetModel,
-    TwitterTweetResponseModel, TwitterUserModel, Variables
+    FavoriteTweetRequest, FavoriteTweetResponse, FavoriteTweetVariables, Reply, TweetResult,
+    TwitterCreateTweetRequestModel, TwitterTweetModel, TwitterTweetResponseModel, TwitterUserModel,
+    Variables
 )
 from twitter_api.twitter_client import TwitterClient
 
@@ -108,6 +109,35 @@ class TwitterTweetsAPIModule:
                 friends_count=user.legacy.friends_count,
             )
         )
+
+    def favorite_tweet(self, tweet_id: str) -> bool:
+        query_id = 'lI07N6Otwv1PhnEgXILM7A'
+        endpoint = f'{self.__twitter_client.gql_url}/{query_id}/FavoriteTweet'
+
+        payload = FavoriteTweetRequest(
+            variables=FavoriteTweetVariables(
+                tweet_id=tweet_id
+            ),
+        )
+
+        response = self.__twitter_client.request(
+            HTTPMethod.POST,
+            endpoint,
+            data=payload.model_dump(),
+            model_type=FavoriteTweetResponse
+        )
+
+        if not response.is_success or response.data is None:
+            logger.error('Failed to favorite tweet')
+
+            logger.error(f'Response status code: {response.status_code}')
+
+            if response.errors:
+                logger.error(f'Response body: {response.errors}')
+
+            return False
+
+        return True
 
     def get_tweet_details(self, tweet_id: str):
         raise NotImplementedError()

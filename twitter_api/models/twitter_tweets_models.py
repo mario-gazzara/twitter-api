@@ -162,3 +162,20 @@ class TwitterTweetModel(BaseModel):
     @property
     def uri(self) -> str:
         return f"https://twitter.com/{self.author.username}/status/{self.rest_id}"
+
+
+class FavoriteTweetVariables(BaseModel):
+    tweet_id: str
+
+
+class FavoriteTweetRequest(BaseModel):
+    variables: FavoriteTweetVariables
+    queryId: str = "lI07N6Otwv1PhnEgXILM7A"
+
+
+class FavoriteTweetDataResponse(BaseModel):
+    favorite_tweet: bool
+
+
+class FavoriteTweetResponse(BaseModel):
+    data: FavoriteTweetDataResponse

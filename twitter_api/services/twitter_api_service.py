@@ -65,3 +65,7 @@ class TwitterAPIService:
     @authenticated
     def create_tweet(self, content: str, in_reply_to_tweet_id: str | None = None) -> str | None:
         return self.__twitter_tweets_api_module.create_tweet(content, in_reply_to_tweet_id)
+
+    @authenticated
+    def favorite_tweet(self, tweet_id: str) -> bool:
+        return self.__twitter_tweets_api_module.favorite_tweet(tweet_id)
