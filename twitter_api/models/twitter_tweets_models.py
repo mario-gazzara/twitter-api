@@ -173,9 +173,10 @@ class FavoriteTweetRequest(BaseModel):
     queryId: str = "lI07N6Otwv1PhnEgXILM7A"
 
 
+# it may happen that the tweet is already liked, so the response will be different (we don't handle this case for now)
 class FavoriteTweetDataResponse(BaseModel):
-    favorite_tweet: str
+    favorite_tweet: str | None = None
 
 
 class FavoriteTweetResponse(BaseModel):
-    data: FavoriteTweetDataResponse
+    data: FavoriteTweetDataResponse | None = None
