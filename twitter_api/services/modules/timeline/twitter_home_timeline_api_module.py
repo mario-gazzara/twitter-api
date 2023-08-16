@@ -135,6 +135,9 @@ class TwitterHomeTimelineAPIModule:
 
             result = item_content.tweet_results.result
 
+            if result is None:
+                continue
+
             tweet = self.__twitter_tweets_api_module.build_tweet_response(result)
 
             if tweet is None:

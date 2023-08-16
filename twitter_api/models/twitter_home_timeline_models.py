@@ -54,7 +54,7 @@ class TwitterHomeTimelineRequestModel(BaseModel):
 
 
 class TweetResults(BaseModel):
-    result: TweetResult
+    result: TweetResult | None = None
 
 
 class ItemContent(BaseModel):
