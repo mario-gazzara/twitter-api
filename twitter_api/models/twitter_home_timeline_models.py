@@ -58,7 +58,7 @@ class TweetResults(BaseModel):
 
 
 class ItemContent(BaseModel):
-    tweet_results: TweetResults
+    tweet_results: TweetResults | None = None
 
 
 class Content(BaseModel):

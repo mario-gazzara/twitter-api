@@ -133,7 +133,12 @@ class TwitterHomeTimelineAPIModule:
             if item_content is None:
                 continue
 
-            result = item_content.tweet_results.result
+            tweet_results = item_content.tweet_results
+
+            if tweet_results is None:
+                continue
+
+            result = tweet_results.result
 
             if result is None:
                 continue
