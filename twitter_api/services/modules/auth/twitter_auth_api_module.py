@@ -70,6 +70,7 @@ class TwitterAuthAPIModule:
                     self.__cookies_cache_service.save_cookies(self.__twitter_client.session, user_id)
 
                 self.__is_authenticated = True
+
                 return self.__is_authenticated
 
             if subtask_id == TwitterAuthFlows.LOGIN_FAILURE_SUBTASK.value:

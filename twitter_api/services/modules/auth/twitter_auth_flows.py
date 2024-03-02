@@ -1,13 +1,9 @@
-# the lines of code below are used to avoid circular imports caused by type hinting
-
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Tuple
 
 if TYPE_CHECKING:
     from twitter_api.services.modules.auth.twitter_auth_context import TwitterAuthenticationContext
-
-# end of the lines of code used to avoid circular imports with type hinting
 
 import abc
 import json

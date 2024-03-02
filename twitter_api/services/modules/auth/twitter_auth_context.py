@@ -27,7 +27,6 @@ class TwitterAuthFlows(str, enum.Enum):
 TW_AUTH_FLOWS_TO_STATES: Dict[str, TwitterAbstractAuthenticationFlow] = {
     TwitterAuthFlows.LOGIN_JS_INSTRUMENTATION_SUBTASK.value: LoginJsInstrumentationSubtaskFlow(),
     TwitterAuthFlows.LOGIN_ENTER_USER_IDENTIFIER_SSO.value: TwitterEnterUserIdentifierSSOFlow(),
-    TwitterAuthFlows.LOGIN_ENTER_USER_IDENTIFIER_SSO.value: TwitterEnterUserIdentifierSSOFlow(),
     TwitterAuthFlows.LOGIN_ENTER_ALTERNATE_IDENTIFIER.value: TwitterEnterAlternateIdentifierFlow(),
     TwitterAuthFlows.LOGIN_ENTER_PASSWORD.value: TwitterEnterPasswordFlow(),
     TwitterAuthFlows.ACCOUNT_DUPLICATION_CHECK.value: TwitterAccountDuplicationCheckFlow(),
